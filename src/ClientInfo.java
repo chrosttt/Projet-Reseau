@@ -1,0 +1,1 @@
+//encapsule les informations d’un client (pseudo, adresse IP, port)
