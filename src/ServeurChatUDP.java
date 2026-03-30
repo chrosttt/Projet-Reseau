@@ -2,8 +2,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ServeurChatUDP {
     private int portPrincipal;
@@ -12,7 +12,7 @@ public class ServeurChatUDP {
 
     public ServeurChatUDP(int portPrincipal) {
         this.portPrincipal = portPrincipal;
-        this.clients = new HashMap<>();
+        this.clients = new ConcurrentHashMap<>();
     }
 
     public DatagramSocket allouerSocket() throws Exception {
@@ -41,16 +41,16 @@ public class ServeurChatUDP {
         }
     }
 
-    public static void main(String[] args) { // Méthode principale
+    public static void main(String[] args) {
         try {
             // 1 - Création du canal
             DatagramSocket socketServeur = new DatagramSocket(null);
             // 2 - Réservation du port
             InetSocketAddress adresse = new InetSocketAddress("localhost", 9000);
             socketServeur.bind(adresse);
-            byte[] recues = new byte[1024]; // tampon d'emission
-            byte[] envoyees; // tampon de reception
-            Map<String, ClientInfo> clients = new HashMap<>();
+            byte[] recues = new byte[1024];
+            byte[] envoyees;
+            ConcurrentHashMap<String, ClientInfo> clients = new ConcurrentHashMap<>(); // corrigé
             while (true) {
                 // 3 - Recevoir
                 DatagramPacket paquetRecu = new DatagramPacket(recues, recues.length);
@@ -73,10 +73,9 @@ public class ServeurChatUDP {
                     // c)
                     ClientInfo info = new ClientInfo(pseudo, adrClient, portDedie);
                     clients.put(pseudo, info);
-                    new Thread(new GestionnaireClient(socketDediee, pseudo, clients)).start();
+                    new Thread(new GestionnaireClient(info, null, socketDediee, clients)).start();
                 }
             }
-            // 5 - Libérer le canal
         } catch (Exception e) {
             System.err.println(e);
         }

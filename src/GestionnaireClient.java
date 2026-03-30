@@ -1,39 +1,67 @@
-import  java.lang.Thread;
-import  java.lang.Runnable;
-import  java.lang.System;
-import  java.lang.Override;
-import  java.lang.Class;
-import java.util.Map;
-import  java.util.concurrent.ConcurrentHashMap;
-import  java.net.DatagramSocket;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.util.concurrent.ConcurrentHashMap;
 
+public class GestionnaireClient implements Runnable {
 
+    private ClientInfo clientInfo;
+    //private ServeurChatUDP serveur;
+    private DatagramSocket socketDediee;
+    private ConcurrentHashMap<String, ClientInfo> clients; // corrigé, enlevé = new HashMap()
 
-
-class GestionnaireClient implements Runnable{
-
-    public GestionnaireClient(DatagramSocket socketDediee, String pseudo, Map<String,ClientInfo> clients) {
+    public GestionnaireClient(ClientInfo info, ServeurChatUDP serveur, DatagramSocket socket, ConcurrentHashMap<String, ClientInfo> clients) {
+        this.clientInfo = info;
+        //this.serveur = serveur;
+        this.socketDediee = socket;
+        this.clients = clients;
     }
 
     @Override
-    public void run(ClientInfo CI, DatagramSocket DS, ConcurrentHashMap CH) { /// code executed by the thread
-        // diffuser le message de bienvenue à tous les clients;
-        ClientInfo = CI;
+    public void run() {
+        try {
+            // 1 - message de bienvenue
+            diffuserMessage("BROADCAST: " + clientInfo.getPseudo() + " a rejoint le chat");
 
+            byte[] buffer = new byte[1024];
 
+            // 2 - boucle de reception
+            while (true) {
+                DatagramPacket paquet = new DatagramPacket(buffer, buffer.length);
+                socketDediee.receive(paquet);
+                String message = new String(paquet.getData(), 0, paquet.getLength());
 
+                // 4 - si le client quitte
+                if (message.equals("EXIT")) {
+                    traiterExit();
+                    break;
+                }
+
+                // 3 - sinon on diffuse le message
+                diffuserMessage("MSG:" + clientInfo.getPseudo() + ": " + message);
+            }
+
+        } catch (Exception e) {
+            System.err.println(e);
+        }
     }
 
-    public void DiffuserMessage(String message, ConcurrentHashMap CH) {
-        // code pour diffuser le message à tous les clients
+    public void diffuserMessage(String message) {
+        for (ClientInfo client : clients.values()) {
+            if (!client.getPseudo().equals(clientInfo.getPseudo())) {
+                try {
+                    byte[] data = message.getBytes();
+                    DatagramPacket paquet = new DatagramPacket(data, data.length, client.getAdresseIP(), client.getPort());
+                    socketDediee.send(paquet);
+                } catch (Exception e) {
+                    System.err.println(e);
+                }
+            }
+        }
+    }
 
-}
-
-public class GFG{
-
-    public static void main(String[] args) {
-        GestionnaireClient GC = new GestionnaireClient();
-        Thread t = new Thread(GC);
-        t.start();   // starts a new thread so, calls run()
+    public void traiterExit() {
+        clients.remove(clientInfo.getPseudo());
+        diffuserMessage("BROADCAST: " + clientInfo.getPseudo() + " a quitté le chat");
+        socketDediee.close();
     }
 }

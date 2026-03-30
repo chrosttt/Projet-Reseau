@@ -7,7 +7,7 @@ public class ClientInfo {
     private String pseudo;
     private InetAddress adresseIP;
     private int port;
-    private DatagramSocket socket;
+   //  private DatagramSocket socket;
 
     public ClientInfo(String pseudo, InetAddress adresseIP, int port){
         ConcurrentHashMap<Integer, String> map = new ConcurrentHashMap<>();
@@ -25,7 +25,7 @@ public class ClientInfo {
     public int getPort (){
         return port;
     }
-    public DatagramSocket getSocket() {
-        return socket;
-    }
+   // public DatagramSocket getSocket() {
+     //   return socket;
+    // }
 }
