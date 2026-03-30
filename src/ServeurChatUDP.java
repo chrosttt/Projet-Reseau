@@ -14,29 +14,9 @@ public class ServeurChatUDP {
     }
 
     public static void main(String[] args) {// Méthode principale
-        try {
-// 1 - Création du canal
-            DatagramSocket socketServeur = new DatagramSocket(null);
-// 2 - Réservation du port
-            InetSocketAddress adresse = new InetSocketAddress("localhost", 9000);
-            socketServeur.bind(adresse);
-            byte[] recues = new byte[1024]; // tampon d'emission
-            byte[] envoyees; // tampon de reception
-            while (true) {
-// 3 - Recevoir
-                DatagramPacket paquetRecu = new DatagramPacket(recues, recues.length);
-                socketServeur.receive(paquetRecu);
-                String message = new String(paquetRecu.getData(), 0, paquetRecu.getLength());
-                System.out.println("Reçu: " + message);
-// 4 - Émettre
-                InetAddress adrClient = paquetRecu.getAddress();
-                int prtClient = paquetRecu.getPort();
-                String reponse = "Accusé de réception";
-                envoyees = reponse.getBytes();
-                DatagramPacket paquetEnvoye = new DatagramPacket(envoyees, envoyees.length, adrClient, prtClient);
-                socketServeur.send(paquetEnvoye);
-            }
-// 5 - Libérer le canal
+        this.PortPrincipal= port; // Port d'écoute du serveur
+        this.SocketPrincipale = DatagramSocket;
+        this.map<String, clientInfo>;
         } catch (Exception e) {
             System.err.println(e);
 
