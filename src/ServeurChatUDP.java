@@ -71,7 +71,7 @@ public class ServeurChatUDP {
                     DatagramPacket paquetEnvoye = new DatagramPacket(envoyees, envoyees.length, adrClient, prtClient);
                     socketServeur.send(paquetEnvoye);
                     // c)
-                    ClientInfo info = new ClientInfo(pseudo, adrClient, portDedie);
+                    ClientInfo info = new ClientInfo(pseudo, adrClient, prtClient);
                     clients.put(pseudo, info);
                     new Thread(new GestionnaireClient(info, null, socketDediee, clients)).start();
                 }
