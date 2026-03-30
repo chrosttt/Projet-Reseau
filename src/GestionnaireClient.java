@@ -3,6 +3,7 @@ import  java.lang.Runnable;
 import  java.lang.System;
 import  java.lang.Override;
 import  java.lang.Class;
+import java.util.Map;
 import  java.util.concurrent.ConcurrentHashMap;
 import  java.net.DatagramSocket;
 
@@ -10,6 +11,9 @@ import  java.net.DatagramSocket;
 
 
 class GestionnaireClient implements Runnable{
+
+    public GestionnaireClient(DatagramSocket socketDediee, String pseudo, Map<String,ClientInfo> clients) {
+    }
 
     @Override
     public void run(ClientInfo CI, DatagramSocket DS, ConcurrentHashMap CH) { /// code executed by the thread
