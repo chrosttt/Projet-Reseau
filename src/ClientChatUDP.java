@@ -1,6 +1,4 @@
 
-
-
 // gère la saisie clavier et crée un thread d’écoute pour la réception
 public class ClientChatUDP {
     public static void main(String[] args){// Méthode principale
