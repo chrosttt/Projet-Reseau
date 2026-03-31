@@ -2,34 +2,9 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServeurChatUDP {
-    private DatagramSocket socketPrincipale;
-    private Map<String, ClientInfo> clients;
-
-    public ServeurChatUDP() {
-        this.clients = new ConcurrentHashMap<>();
-    }
-
-    public DatagramSocket allouerSocket() throws Exception {
-        return new DatagramSocket(0);
-    }
-    public void diffuser(String message, String expediteur) {
-        for (ClientInfo client : clients.values()) {
-            if (!client.getPseudo().equals(expediteur)) {
-                try {
-                    byte[] data = message.getBytes();
-                    DatagramPacket paquet = new DatagramPacket(data, data.length, client.getAdresseIP(), client.getPort());
-                    socketPrincipale.send(paquet);
-                } catch (Exception e) {
-                    System.err.println(e);
-                }
-            }
-        }
-    }
-
     public static void main(String[] args) {
         try {
             // 1 - Création du canal
