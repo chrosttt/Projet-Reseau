@@ -27,9 +27,11 @@ public class GestionnaireClient implements Runnable {
     @Override
     public void run() {
         try {
+            System.out.println("GestionnaireClient démarré pour " + clientInfo.getPseudo()
+                    + " sur port dédié : " + socketDediee.getLocalPort()
+                    + " client port : " + clientInfo.getPort());
             socketDediee.setSoTimeout(TIMEOUT_MS);
             diffuserMessage("BROADCAST: " + clientInfo.getPseudo() + " a rejoint le chat");
-
             while (true) {
                 byte[] buffer = new byte[1024];
                 DatagramPacket paquet = new DatagramPacket(buffer, buffer.length);
