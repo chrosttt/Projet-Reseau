@@ -6,27 +6,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServeurChatUDP {
-    private int portPrincipal;
     private DatagramSocket socketPrincipale;
     private Map<String, ClientInfo> clients;
 
-    public ServeurChatUDP(int portPrincipal) {
-        this.portPrincipal = portPrincipal;
+    public ServeurChatUDP() {
         this.clients = new ConcurrentHashMap<>();
     }
 
     public DatagramSocket allouerSocket() throws Exception {
         return new DatagramSocket(0);
     }
-
-    public void ajouterClient(ClientInfo info) {
-        clients.put(info.getPseudo(), info);
-    }
-
-    public void supprimerClient(String pseudo) {
-        clients.remove(pseudo);
-    }
-
     public void diffuser(String message, String expediteur) {
         for (ClientInfo client : clients.values()) {
             if (!client.getPseudo().equals(expediteur)) {
