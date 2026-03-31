@@ -1,17 +1,25 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class GestionnaireClient implements Runnable {
 
-    private ClientInfo clientInfo;
-    //private ServeurChatUDP serveur;
-    private DatagramSocket socketDediee;
-    private ConcurrentHashMap<String, ClientInfo> clients; // corrigé, enlevé = new HashMap()
+    private static final int TIMEOUT_MS = 60_000;
 
-    public GestionnaireClient(ClientInfo info, ServeurChatUDP serveur, DatagramSocket socket, ConcurrentHashMap<String, ClientInfo> clients) {
+    private final ClientInfo clientInfo;
+    private final DatagramSocket socketDediee;
+    private final ConcurrentHashMap<String, ClientInfo> clients;
+
+    public GestionnaireClient(
+            ClientInfo info,
+            ServeurChatUDP serveur,
+            DatagramSocket socket,
+            ConcurrentHashMap<String, ClientInfo> clients
+    ) {
         this.clientInfo = info;
-        //this.serveur = serveur;
         this.socketDediee = socket;
         this.clients = clients;
     }
@@ -19,27 +27,59 @@ public class GestionnaireClient implements Runnable {
     @Override
     public void run() {
         try {
-            // 1 - message de bienvenue
+            socketDediee.setSoTimeout(TIMEOUT_MS);
             diffuserMessage("BROADCAST: " + clientInfo.getPseudo() + " a rejoint le chat");
 
-            byte[] buffer = new byte[1024];
-
-            // 2 - boucle de reception
             while (true) {
+                byte[] buffer = new byte[1024];
                 DatagramPacket paquet = new DatagramPacket(buffer, buffer.length);
-                socketDediee.receive(paquet);
-                String message = new String(paquet.getData(), 0, paquet.getLength());
 
-                // 4 - si le client quitte
-                if (message.equals("EXIT")) {
+                try {
+                    socketDediee.receive(paquet);
+                } catch (SocketTimeoutException e) {
+                    traiterTimeout();
+                    break;
+                }
+
+                String message = new String(paquet.getData(), 0, paquet.getLength()).trim();
+                if (message.isEmpty()) {
+                    continue;
+                }
+
+                if (message.equalsIgnoreCase("EXIT")) {
                     traiterExit();
                     break;
                 }
 
-                // 3 - sinon on diffuse le message
+                if (message.equalsIgnoreCase("/liste")) {
+                    envoyerListeClients();
+                    continue;
+                }
+
+                if (message.startsWith("/mp ")) {
+                    traiterMessagePrive(message);
+                    continue;
+                }
+
                 diffuserMessage("MSG:" + clientInfo.getPseudo() + ": " + message);
             }
+        } catch (Exception e) {
+            if (!socketDediee.isClosed()) {
+                System.err.println(e);
+            }
+        }
+    }
 
+    private void envoyerMessage(ClientInfo destinataire, String message) {
+        try {
+            byte[] data = message.getBytes();
+            DatagramPacket paquet = new DatagramPacket(
+                    data,
+                    data.length,
+                    destinataire.getAdresseIP(),
+                    destinataire.getPort()
+            );
+            socketDediee.send(paquet);
         } catch (Exception e) {
             System.err.println(e);
         }
@@ -48,20 +88,44 @@ public class GestionnaireClient implements Runnable {
     public void diffuserMessage(String message) {
         for (ClientInfo client : clients.values()) {
             if (!client.getPseudo().equals(clientInfo.getPseudo())) {
-                try {
-                    byte[] data = message.getBytes();
-                    DatagramPacket paquet = new DatagramPacket(data, data.length, client.getAdresseIP(), client.getPort());
-                    socketDediee.send(paquet);
-                } catch (Exception e) {
-                    System.err.println(e);
-                }
+                envoyerMessage(client, message);
             }
         }
     }
 
+    private void envoyerListeClients() {
+        ArrayList<String> pseudos = new ArrayList<>(clients.keySet());
+        Collections.sort(pseudos);
+        envoyerMessage(clientInfo, "LISTE: " + String.join(", ", pseudos));
+    }
+
+    private void traiterMessagePrive(String message) {
+        String[] morceaux = message.split("\\s+", 3);
+        if (morceaux.length < 3 || morceaux[2].trim().isEmpty()) {
+            envoyerMessage(clientInfo, "Usage: /mp <pseudo> <message>");
+            return;
+        }
+
+        ClientInfo destinataire = clients.get(morceaux[1]);
+        if (destinataire == null) {
+            envoyerMessage(clientInfo, "Utilisateur inconnu");
+            return;
+        }
+
+        String messagePrive = "MP de " + clientInfo.getPseudo() + ": " + morceaux[2].trim();
+        envoyerMessage(destinataire, messagePrive);
+    }
+
     public void traiterExit() {
         clients.remove(clientInfo.getPseudo());
-        diffuserMessage("BROADCAST: " + clientInfo.getPseudo() + " a quitté le chat");
+        diffuserMessage("BROADCAST: " + clientInfo.getPseudo() + " a quitte le chat");
+        socketDediee.close();
+    }
+
+    private void traiterTimeout() {
+        envoyerMessage(clientInfo, "TIMEOUT");
+        clients.remove(clientInfo.getPseudo());
+        diffuserMessage("BROADCAST: " + clientInfo.getPseudo() + " a quitte le chat");
         socketDediee.close();
     }
 }
