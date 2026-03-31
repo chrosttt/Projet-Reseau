@@ -46,7 +46,7 @@ public class ClientChatUDP {
         this.portServeur = portServeur;
         this.socket = new DatagramSocket();
     }
-
+    // à changer
     public void connecter() throws Exception {
         if (connecte) {
             return;
@@ -73,7 +73,7 @@ public class ClientChatUDP {
 
         portDedie = Integer.parseInt(morceaux[1].trim());
         connecte = true;
-
+        // à changer
         threadEcoute = new Thread(new ThreadEcouteClient(socket), "ClientChatUDP-Ecoute-" + pseudo);
         threadEcoute.setDaemon(true);
         threadEcoute.start();
@@ -88,7 +88,7 @@ public class ClientChatUDP {
         DatagramPacket packet = new DatagramPacket(data, data.length, adresseServeur, portDedie);
         socket.send(packet);
     }
-
+    // à changer
     public void deconnecter() {
         connecte = false;
         if (!socket.isClosed()) {
