@@ -10,7 +10,6 @@ public class ClientInfo {
 
 
     public ClientInfo(String pseudo, InetAddress adresseIP, int port){
-        ConcurrentHashMap<Integer, String> map = new ConcurrentHashMap<>();
         this.port = port;
         this.adresseIP = adresseIP;
         this.pseudo = pseudo;

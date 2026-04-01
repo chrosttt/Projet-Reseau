@@ -15,7 +15,6 @@ public class GestionnaireClient implements Runnable {
 
     public GestionnaireClient(
             ClientInfo info,
-            ServeurChatUDP serveur,
             DatagramSocket socket,
             ConcurrentHashMap<String, ClientInfo> clients
     ) {
